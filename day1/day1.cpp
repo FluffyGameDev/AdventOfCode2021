@@ -6,7 +6,7 @@
 
 bool ReadInputValues(std::vector<std::uint32_t>& inputValues)
 {
-	static const char* inputFile{ "input_day1.txt" };
+	static const char* inputFile{ "input.txt" };
 	std::ifstream inputStream{ inputFile };
 
 	bool readSucceeded{ inputStream.is_open() };
