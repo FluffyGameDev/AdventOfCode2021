@@ -6,3 +6,5 @@ add_custom_command(TARGET AdventOfCode2021_Day1 POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy
                            ${CMAKE_CURRENT_SOURCE_DIR}/input.txt
                            ${CMAKE_CURRENT_BINARY_DIR}/input.txt)
+
+set_property(TARGET AdventOfCode2021_Day1 PROPERTY CXX_STANDARD 17)
