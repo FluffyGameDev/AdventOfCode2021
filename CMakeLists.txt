@@ -2,6 +2,8 @@
 
 project ("AdventOfCode2021")
 
+add_subdirectory(external/fmt EXCLUDE_FROM_ALL)
+
 add_subdirectory (Day1)
 add_subdirectory (Day2)
 add_subdirectory (Day3)

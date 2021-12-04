@@ -2,8 +2,9 @@
 #include <algorithm>
 #include <functional>
 #include <fstream>
-#include <iostream>
 #include <vector>
+
+#include <fmt/core.h>
 
 constexpr size_t bitsPerValue{ 12 };
 using BitCounter = std::array<std::uint32_t, bitsPerValue>;
@@ -97,9 +98,9 @@ int main()
         BitCounter bitCount{};
         ComputeBitCount(valueList, bitCount);
         auto [gamma, epsilon] { ComputeGammaEpsilonValues(bitCount, valueList.size()) };
-        std::cout << "Gamma: " << gamma << '\n';
-        std::cout << "Epsilon: " << epsilon << '\n';
-        std::cout << "Gamma * Epsilon: " << gamma * epsilon << '\n';
+        fmt::print("Gamme: {}\n", gamma);
+        fmt::print("Epsilon: {}\n", epsilon);
+        fmt::print("Gamma * Epsilon: {}\n", gamma * epsilon);
 
         auto o2Filter = [](std::uint32_t count, std::uint32_t total) { return count >= (total - count); };
         std::uint32_t o2GeneratorRating{ ComputeRating(valueList, o2Filter) };
@@ -107,13 +108,13 @@ int main()
         auto co2Filter = [](std::uint32_t count, std::uint32_t total) { return count < (total - count); };
         std::uint32_t co2scrubberRating{ ComputeRating(valueList, co2Filter) };
 
-        std::cout << "O2 Generator Rating: " << o2GeneratorRating << '\n';
-        std::cout << "CO2 scrubber Rating: " << co2scrubberRating << '\n';
-        std::cout << "O2 Generator * CO2 scrubber: " << o2GeneratorRating * co2scrubberRating << '\n';
+        fmt::print("O2 Generator Rating: {}\n", o2GeneratorRating);
+        fmt::print("CO2 scrubber Rating: {}\n", co2scrubberRating);
+        fmt::print("O2 Generator * CO2 scrubber: {}\n", o2GeneratorRating * co2scrubberRating);
 	}
 	else
 	{
-		std::cout << "Failed to open input file.\n";
+        fmt::print("Failed to open input file.\n");
 	}
 
 	return 0;

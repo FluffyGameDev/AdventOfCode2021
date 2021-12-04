@@ -1,6 +1,10 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
+include_directories("${CMAKE_SOURCE_DIR}/external/fmt/include")
+
 add_executable (AdventOfCode2021_Day3 "day3.cpp" )
+
+target_link_libraries(AdventOfCode2021_Day3 PRIVATE fmt::fmt-header-only)
 
 add_custom_command(TARGET AdventOfCode2021_Day3 POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy

@@ -1,8 +1,9 @@
 ﻿#include <algorithm>
 #include <fstream>
-#include <iostream>
 #include <numeric>
 #include <vector>
+
+#include <fmt/core.h>
 
 bool ReadInputValues(std::vector<std::uint32_t>& inputValues)
 {
@@ -66,12 +67,13 @@ int main()
 	{
 		auto increaseCount = ComputeIncreaseCount(inputValues);
 		auto sumIncreaseCount = ComputeSumIncreaseCount(inputValues);
-		std::cout << "Increase Count: " << increaseCount << '\n';
-		std::cout << "Sum Increase Count: " << sumIncreaseCount << '\n';
+
+		fmt::print("Increase Count: {}\n", increaseCount);
+		fmt::print("Sum Increase Count: {}\n", sumIncreaseCount);
 	}
 	else
 	{
-		std::cout << "Failed to open input file.\n";
+		fmt::print("Failed to open input file.\n");
 	}
 
 	return 0;

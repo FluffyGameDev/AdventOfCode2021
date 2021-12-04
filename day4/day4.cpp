@@ -1,12 +1,13 @@
 ﻿#include <algorithm>
 #include <array>
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <fmt/core.h>
 
 using u8 = std::uint8_t;
 using u32 = std::uint32_t;
@@ -206,17 +207,17 @@ int main()
 		{
 			for (const BingoBoardWinnerData& winnerData : winners)
 			{
-				std::cout << "Winner Score: " << winnerData.Score << '\n';
+				fmt::print("Winner Score: {}\n", winnerData.Score);
 			}
 		}
 		else
 		{
-			std::cout << "Failed to find a winner.\n";
+			fmt::print("Failed to find a winner.\n");
 		}
 	}
 	else
 	{
-		std::cout << "Failed to open input file.\n";
+		fmt::print("Failed to open input file.\n");
 	}
 
 	return 0;

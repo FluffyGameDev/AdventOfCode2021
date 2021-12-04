@@ -1,7 +1,8 @@
 ﻿#include <functional>
 #include <fstream>
-#include <iostream>
 #include <unordered_map>
+
+#include <fmt/core.h>
 
 struct CommandQuery
 {
@@ -104,11 +105,11 @@ int main()
 
 	if (ParseInput(context))
 	{
-		std::cout << "HorPosition * Depth = " << context.HorPosition * context.Depth << '\n';
+        fmt::print("HorPosition * Depth = {}\n", context.HorPosition * context.Depth);
 	}
 	else
 	{
-		std::cout << "Failed to open input file.\n";
+        fmt::print("Failed to open input file.\n");
 	}
 
 	return 0;
