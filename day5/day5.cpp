@@ -43,26 +43,17 @@ bool ReadInput(std::vector<Line>& lines)
 
 bool IsInRange(i32 x, i32 a, i32 b)
 {
-	if (a < b)
-	{
-		return a <= x && x <= b;
-	}
-	else
-	{
-		return a >= x && x >= b;
-	}
+	i32 minValue{ std::min(a, b) };
+	i32 maxValue{ std::max(a, b) };
+	return minValue <= x && x <= maxValue;
 }
 
-void FindIntersectionPoints(const Line& line1, const Line& line2, std::vector<Vec2>& intersections)
+void FindIntersectionPointsWithoutDiagonals(const Line& line1, const Line& line2, std::vector<Vec2>& intersections)
 {
 	bool line1Hor{ line1.Start.y == line1.End.y };
 	bool line1Ver{ line1.Start.x == line1.End.x };
 	bool line2Hor{ line2.Start.y == line2.End.y };
 	bool line2Ver{ line2.Start.x == line2.End.x };
-
-	bool line1Valid{ line1Hor || line1Ver };
-	bool line2Valid{ line2Hor || line2Ver };
-	if (!line1Valid || !line2Valid) return;
 
 	if (line1Hor && line2Hor)
 	{
@@ -106,7 +97,7 @@ void FindIntersectionPoints(const Line& line1, const Line& line2, std::vector<Ve
 			}
 		}
 	}
-	else
+	else if (line1Hor && line2Ver || line1Ver && line2Hor)
 	{
 		const Line& lineHor{ line1Hor ? line1 : line2 };
 		const Line& lineVer{ line1Hor ? line2 : line1 };
@@ -118,6 +109,10 @@ void FindIntersectionPoints(const Line& line1, const Line& line2, std::vector<Ve
 			intersections.push_back(intersectionPoint);
 		}
 	}
+	else
+	{
+		// Diagonals....
+	}
 }
 
 void ComputeLineIntersections(const std::vector<Line>& lines, std::vector<Vec2>& intersections)
@@ -127,7 +122,7 @@ void ComputeLineIntersections(const std::vector<Line>& lines, std::vector<Vec2>&
 	{
 		for (auto line2It = line1It + 1; line2It != endIt; ++line2It)
 		{
-			FindIntersectionPoints(*line1It, *line2It, intersections);
+			FindIntersectionPointsWithoutDiagonals(*line1It, *line2It, intersections);
 		}
 	}
 }
