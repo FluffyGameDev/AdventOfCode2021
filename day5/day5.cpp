@@ -1,12 +1,14 @@
-﻿#include <cstdio>
-#include <set>
+﻿#include <algorithm>
+#include <cstdio>
 #include <vector>
 
 #include <fmt/core.h>
 
+using u8 = std::uint32_t;
 using i32 = std::int32_t;
-using u32 = std::uint32_t;
 using u64 = std::uint64_t;
+
+static constexpr size_t K_GRID_WIDTH{ 1000 };
 
 struct Vec2
 {
@@ -20,38 +22,14 @@ struct Line
 	Vec2 End{};
 };
 
-bool IsInRange(i32 x, i32 a, i32 b)
-{
-	i32 minValue{ std::min(a, b) };
-	i32 maxValue{ std::max(a, b) };
-	return minValue <= x && x <= maxValue;
-}
-
-i32 DotProduct(const Vec2& v1, const Vec2& v2)
-{
-	return v1.x * v2.x + v1.y * v2.y;
-}
-
 Vec2 operator-(const Vec2& v1, const Vec2& v2)
 {
 	return { v1.x - v2.x, v1.y - v2.y };
 }
 
-bool AreDirectionsParallel(const Vec2& dir1, const Vec2& dir2)
+i32 Abs(i32 value)
 {
-	i32 dotProduct{ DotProduct(dir1, dir2) };
-	i32 lenSquared1{ DotProduct(dir1, dir1) };
-	i32 lenSquared2{ DotProduct(dir2, dir2) };
-
-	return (lenSquared1 * lenSquared2 == dotProduct * dotProduct);
-}
-
-Vec2 ComputeManhattanUnit(const Vec2& v)
-{
-	return {
-		v.x != 0 ? v.x / std::abs(v.x) : 0,
-		v.y != 0 ? v.y / std::abs(v.y) : 0
-	};
+	return (value < 0 ? -value : value);
 }
 
 
@@ -81,89 +59,45 @@ bool ReadInput(std::vector<Line>& lines, bool ignoreDiagonals)
 	return readSucceeded;
 }
 
-void FindIntersectionPoints(const Line& line1, const Line& line2, std::vector<Vec2>& intersections)
+Vec2 ComputeManhattanUnit(const Vec2& v)
 {
-	if (AreDirectionsParallel(line1.End - line1.Start, line2.End - line2.Start))
+	return {
+		v.x != 0 ? v.x / Abs(v.x) : 0,
+		v.y != 0 ? v.y / Abs(v.y) : 0
+	};
+}
+
+void DrawLineOnGrid(std::vector<u8>& grid, const Line& line)
+{
+	Vec2 unit{ ComputeManhattanUnit(line.End - line.Start) };
+	Vec2 curPos{ line.Start };
+
+	while (curPos.x != line.End.x || curPos.y != line.End.y)
 	{
-		if (AreDirectionsParallel(line2.Start - line1.Start, line2.End - line1.Start))
-		{
-			Vec2 unit{ ComputeManhattanUnit(line1.End - line1.Start) };
-			Vec2 currentPosition{ line1.Start };
-			while (currentPosition.x != line1.End.x || currentPosition.y != line1.End.y)
-			{
-				// Could be made more efficient by iterating only over the points we need to add.
-				if (IsInRange(currentPosition.x, line2.Start.x, line2.End.x) &&
-					IsInRange(currentPosition.y, line2.Start.y, line2.End.y))
-				{
-					intersections.push_back(currentPosition);
-				}
+		++grid[curPos.x + curPos.y * K_GRID_WIDTH];
 
-				currentPosition.x += unit.x;
-				currentPosition.y += unit.y;
-			}
-
-			if (IsInRange(currentPosition.x, line2.Start.x, line2.End.x) &&
-				IsInRange(currentPosition.y, line2.Start.y, line2.End.y))
-			{
-				intersections.push_back(currentPosition);
-			}
-		}
+		curPos.x += unit.x;
+		curPos.y += unit.y;
 	}
-	else
+
+	if (line.Start.x != line.End.x || line.Start.y != line.End.y)
 	{
-		Vec2 unit{ ComputeManhattanUnit(line1.End - line1.Start) };
-		Vec2 currentPosition{ line1.Start };
-		while (currentPosition.x != line1.End.x || currentPosition.y != line1.End.y)
-		{
-			// Need a way to compute intersection point with proper math...
-			Vec2 d1{ currentPosition - line2.Start };
-			Vec2 d2{ currentPosition - line2.End };
-			if (AreDirectionsParallel(d1, d2) &&
-				DotProduct(d1, d2) <= 0)
-			{
-				intersections.push_back(currentPosition);
-				break;
-			}
-
-			currentPosition.x += unit.x;
-			currentPosition.y += unit.y;
-		}
-
-		{
-			Vec2 d1{ currentPosition - line2.Start };
-			Vec2 d2{ currentPosition - line2.End };
-			if (AreDirectionsParallel(d1, d2) &&
-				DotProduct(d1, d2) < 0)
-			{
-				intersections.push_back(currentPosition);
-			}
-		}
+		++grid[curPos.x + curPos.y * K_GRID_WIDTH];
 	}
 }
 
-void ComputeLineIntersections(const std::vector<Line>& lines, std::vector<Vec2>& intersections)
+void DrawLinesOnGrid(std::vector<u8>& grid, const std::vector<Line>& lines)
 {
-	const auto endIt{ lines.end() };
-	for (auto line1It = lines.begin(); line1It != endIt; ++line1It)
+	for (const Line& line : lines)
 	{
-		for (auto line2It = line1It + 1; line2It != endIt; ++line2It)
-		{
-			FindIntersectionPoints(*line1It, *line2It, intersections);
-		}
+		DrawLineOnGrid(grid, line);
 	}
 }
 
-u32 ComputeUniqueIntersectionCount(const std::vector<Vec2>& intersections)
+u64 ComputeIntersectionCount(const std::vector<u8>& grid)
 {
-	std::set<u64> uniqueIntersections;
-
-	for (const Vec2& position : intersections)
-	{
-		const u64& positionHash{ reinterpret_cast<const u64&>(position) };
-		uniqueIntersections.insert(positionHash);
-	}
-
-	return (u32)uniqueIntersections.size();
+	auto hasMultipleIntersections = [](u8 cellCount) { return cellCount > 1; };
+	return (u64)std::count_if(grid.begin(), grid.end(), hasMultipleIntersections);
 }
 
 int main()
@@ -171,10 +105,15 @@ int main()
 	std::vector<Line> lines{};
 	if (ReadInput(lines, /*ignoreDiagonals*/false))
 	{
-		std::vector<Vec2> intersections{};
-		ComputeLineIntersections(lines, intersections);
+		static constexpr size_t gridCellCount{ K_GRID_WIDTH * K_GRID_WIDTH };
+		std::vector<u8> grid(gridCellCount, 0);
 
-		u32 intersectionCount{ ComputeUniqueIntersectionCount(intersections) };
+		// Brute forcing the hell out of this problem.
+		// Could be a lot more efficient with some vector math.
+		DrawLinesOnGrid(grid, lines);
+
+		u64 intersectionCount{ ComputeIntersectionCount(grid) };
+
 		fmt::print("Unique Intersection Count: {}.\n", intersectionCount);
 	}
 	else
