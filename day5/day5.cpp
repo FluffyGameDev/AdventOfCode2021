@@ -20,7 +20,43 @@ struct Line
 	Vec2 End{};
 };
 
-bool ReadInput(std::vector<Line>& lines)
+bool IsInRange(i32 x, i32 a, i32 b)
+{
+	i32 minValue{ std::min(a, b) };
+	i32 maxValue{ std::max(a, b) };
+	return minValue <= x && x <= maxValue;
+}
+
+i32 DotProduct(const Vec2& v1, const Vec2& v2)
+{
+	return v1.x * v2.x + v1.y * v2.y;
+}
+
+Vec2 operator-(const Vec2& v1, const Vec2& v2)
+{
+	return { v1.x - v2.x, v1.y - v2.y };
+}
+
+bool AreDirectionsParallel(const Vec2& dir1, const Vec2& dir2)
+{
+	i32 dotProduct{ DotProduct(dir1, dir2) };
+	i32 lenSquared1{ DotProduct(dir1, dir1) };
+	i32 lenSquared2{ DotProduct(dir2, dir2) };
+
+	return (lenSquared1 * lenSquared2 == dotProduct * dotProduct);
+}
+
+Vec2 ComputeManhattanUnit(const Vec2& v)
+{
+	return {
+		v.x != 0 ? v.x / std::abs(v.x) : 0,
+		v.y != 0 ? v.y / std::abs(v.y) : 0
+	};
+}
+
+
+
+bool ReadInput(std::vector<Line>& lines, bool ignoreDiagonals)
 {
 	static const char* inputFile{ "input.txt" };
 	FILE* fileHandle{};
@@ -32,7 +68,11 @@ bool ReadInput(std::vector<Line>& lines)
 		Line newLine{};
 		while (fscanf_s(fileHandle, "%d,%d -> %d,%d\n", &newLine.Start.x, &newLine.Start.y, &newLine.End.x, &newLine.End.y) == 4)
 		{
-			lines.emplace_back(newLine);
+			bool isDiagonal{ newLine.Start.x != newLine.End.x && newLine.Start.y != newLine.End.y };
+			if (!ignoreDiagonals || !isDiagonal)
+			{
+				lines.emplace_back(newLine);
+			}
 		}
 
 		fclose(fileHandle);
@@ -41,77 +81,63 @@ bool ReadInput(std::vector<Line>& lines)
 	return readSucceeded;
 }
 
-bool IsInRange(i32 x, i32 a, i32 b)
+void FindIntersectionPoints(const Line& line1, const Line& line2, std::vector<Vec2>& intersections)
 {
-	i32 minValue{ std::min(a, b) };
-	i32 maxValue{ std::max(a, b) };
-	return minValue <= x && x <= maxValue;
-}
-
-void FindIntersectionPointsWithoutDiagonals(const Line& line1, const Line& line2, std::vector<Vec2>& intersections)
-{
-	bool line1Hor{ line1.Start.y == line1.End.y };
-	bool line1Ver{ line1.Start.x == line1.End.x };
-	bool line2Hor{ line2.Start.y == line2.End.y };
-	bool line2Ver{ line2.Start.x == line2.End.x };
-
-	if (line1Hor && line2Hor)
+	if (AreDirectionsParallel(line1.End - line1.Start, line2.End - line2.Start))
 	{
-		if (line1.Start.y == line2.Start.y)
+		if (AreDirectionsParallel(line2.Start - line1.Start, line2.End - line1.Start))
 		{
-			i32 line1Left{ std::min(line1.Start.x, line1.End.x) };
-			i32 line1Right{ std::max(line1.Start.x, line1.End.x) };
-			i32 line2Left{ std::min(line2.Start.x, line2.End.x) };
-			i32 line2Right{ std::max(line2.Start.x, line2.End.x) };
-
-			if (line1Left <= line2Right || line1Right >= line2Left)
+			Vec2 unit{ ComputeManhattanUnit(line1.End - line1.Start) };
+			Vec2 currentPosition{ line1.Start };
+			while (currentPosition.x != line1.End.x || currentPosition.y != line1.End.y)
 			{
-				i32 innerLeft{ std::max(line1Left, line2Left) };
-				i32 innerRight{ std::min(line1Right, line2Right) };
-				for (i32 i = innerLeft; i <= innerRight; ++i)
+				// Could be made more efficient by iterating only over the points we need to add.
+				if (IsInRange(currentPosition.x, line2.Start.x, line2.End.x) &&
+					IsInRange(currentPosition.y, line2.Start.y, line2.End.y))
 				{
-					Vec2 point{ i, line1.Start.y };
-					intersections.push_back(point);
+					intersections.push_back(currentPosition);
 				}
-			}
-		}
-	}
-	else if (line1Ver && line2Ver)
-	{
-		if (line1.Start.x == line2.Start.x)
-		{
-			i32 line1Top{ std::min(line1.Start.y, line1.End.y) };
-			i32 line1Bottom{ std::max(line1.Start.y, line1.End.y) };
-			i32 line2Top{ std::min(line2.Start.y, line2.End.y) };
-			i32 line2Bottom{ std::max(line2.Start.y, line2.End.y) };
 
-			if (line1Top <= line2Bottom || line1Bottom >= line2Top)
+				currentPosition.x += unit.x;
+				currentPosition.y += unit.y;
+			}
+
+			if (IsInRange(currentPosition.x, line2.Start.x, line2.End.x) &&
+				IsInRange(currentPosition.y, line2.Start.y, line2.End.y))
 			{
-				i32 innerTop{ std::max(line1Top, line2Top) };
-				i32 innerBottom{ std::min(line1Bottom, line2Bottom) };
-				for (i32 i = innerTop; i <= innerBottom; ++i)
-				{
-					Vec2 point{ line1.Start.x, i };
-					intersections.push_back(point);
-				}
+				intersections.push_back(currentPosition);
 			}
-		}
-	}
-	else if (line1Hor && line2Ver || line1Ver && line2Hor)
-	{
-		const Line& lineHor{ line1Hor ? line1 : line2 };
-		const Line& lineVer{ line1Hor ? line2 : line1 };
-		Vec2 intersectionPoint{ lineVer.Start.x, lineHor.Start.y };
-
-		if (IsInRange(intersectionPoint.x, lineHor.Start.x, lineHor.End.x) &&
-			IsInRange(intersectionPoint.y, lineVer.Start.y, lineVer.End.y))
-		{
-			intersections.push_back(intersectionPoint);
 		}
 	}
 	else
 	{
-		// Diagonals....
+		Vec2 unit{ ComputeManhattanUnit(line1.End - line1.Start) };
+		Vec2 currentPosition{ line1.Start };
+		while (currentPosition.x != line1.End.x || currentPosition.y != line1.End.y)
+		{
+			// Need a way to compute intersection point with proper math...
+			Vec2 d1{ currentPosition - line2.Start };
+			Vec2 d2{ currentPosition - line2.End };
+			if (AreDirectionsParallel(d1, d2) &&
+				DotProduct(d1, d2) <= 0)
+			{
+				intersections.push_back(currentPosition);
+				break;
+			}
+
+			currentPosition.x += unit.x;
+			currentPosition.y += unit.y;
+		}
+
+		{
+			Vec2 d1{ currentPosition - line2.Start };
+			Vec2 d2{ currentPosition - line2.End };
+			if (AreDirectionsParallel(d1, d2) &&
+				DotProduct(d1, d2) < 0)
+			{
+				intersections.push_back(currentPosition);
+			}
+		}
 	}
 }
 
@@ -122,7 +148,7 @@ void ComputeLineIntersections(const std::vector<Line>& lines, std::vector<Vec2>&
 	{
 		for (auto line2It = line1It + 1; line2It != endIt; ++line2It)
 		{
-			FindIntersectionPointsWithoutDiagonals(*line1It, *line2It, intersections);
+			FindIntersectionPoints(*line1It, *line2It, intersections);
 		}
 	}
 }
@@ -143,7 +169,7 @@ u32 ComputeUniqueIntersectionCount(const std::vector<Vec2>& intersections)
 int main()
 {
 	std::vector<Line> lines{};
-	if (ReadInput(lines))
+	if (ReadInput(lines, /*ignoreDiagonals*/false))
 	{
 		std::vector<Vec2> intersections{};
 		ComputeLineIntersections(lines, intersections);
