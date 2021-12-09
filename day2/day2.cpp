@@ -103,14 +103,14 @@ int main()
     context.RegisterCommand("down", &CommandRegistry::RunDownCommand);
     context.RegisterCommand("up", &CommandRegistry::RunUpCommand);
 
-	if (ParseInput(context))
-	{
+    if (ParseInput(context))
+    {
         fmt::print("HorPosition * Depth = {}\n", context.HorPosition * context.Depth);
-	}
-	else
-	{
+    }
+    else
+    {
         fmt::print("Failed to open input file.\n");
-	}
+    }
 
-	return 0;
+    return 0;
 }

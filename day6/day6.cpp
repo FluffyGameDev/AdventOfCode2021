@@ -18,63 +18,63 @@ using FishCounter = std::array<u64, K_DAYS_PER_REPRODUCTION_NEW_FISH>;
 
 bool ReadInput(FishCounter& fishCounter)
 {
-	static const char* inputFile{ "input.txt" };
-	std::ifstream inputStream{ inputFile };
+    static const char* inputFile{ "input.txt" };
+    std::ifstream inputStream{ inputFile };
 
-	bool readSucceeded{ inputStream.is_open() };
-	if (readSucceeded)
-	{
-		while (!inputStream.eof())
-		{
-			char readchar{};
-			inputStream >> readchar;
-			u32 daysLeft{ (u32)(readchar - '0') };
-			++fishCounter[daysLeft];
+    bool readSucceeded{ inputStream.is_open() };
+    if (readSucceeded)
+    {
+        while (!inputStream.eof())
+        {
+            char readchar{};
+            inputStream >> readchar;
+            u32 daysLeft{ (u32)(readchar - '0') };
+            ++fishCounter[daysLeft];
 
-			inputStream >> readchar;
-		}
+            inputStream >> readchar;
+        }
 
-		inputStream.close();
-	}
+        inputStream.close();
+    }
 
-	return readSucceeded;
+    return readSucceeded;
 }
 
 void SimulateDay(FishCounter& fishCounter)
 {
-	u64 fishGivingBirth{ fishCounter[0] };
-	std::rotate(fishCounter.begin(), fishCounter.begin() + 1, fishCounter.end());
-	fishCounter[K_DAYS_PER_REPRODUCTION - 1] += fishGivingBirth;
-	fishCounter[K_DAYS_PER_REPRODUCTION_NEW_FISH - 1] = fishGivingBirth;
+    u64 fishGivingBirth{ fishCounter[0] };
+    std::rotate(fishCounter.begin(), fishCounter.begin() + 1, fishCounter.end());
+    fishCounter[K_DAYS_PER_REPRODUCTION - 1] += fishGivingBirth;
+    fishCounter[K_DAYS_PER_REPRODUCTION_NEW_FISH - 1] = fishGivingBirth;
 }
 
 void SimulateForNDays(FishCounter& fishCounter, u32 simulationLength)
 {
-	for (u32 day = 0; day < simulationLength; ++day)
-	{
-		SimulateDay(fishCounter);
-	}
+    for (u32 day = 0; day < simulationLength; ++day)
+    {
+        SimulateDay(fishCounter);
+    }
 }
 
 u64 ComputeTotalFishCount(const FishCounter& fishCounter)
 {
-	return std::accumulate(fishCounter.begin(), fishCounter.end(), 0ULL);
+    return std::accumulate(fishCounter.begin(), fishCounter.end(), 0ULL);
 }
 
 int main()
 {
-	FishCounter fishCounter{};
-	if (ReadInput(fishCounter))
-	{
-		SimulateForNDays(fishCounter, K_NUMBER_OF_DAYS);
-		u64 totalFishCount{ ComputeTotalFishCount(fishCounter) };
+    FishCounter fishCounter{};
+    if (ReadInput(fishCounter))
+    {
+        SimulateForNDays(fishCounter, K_NUMBER_OF_DAYS);
+        u64 totalFishCount{ ComputeTotalFishCount(fishCounter) };
 
-		fmt::print("Total fish count: {}.\n", totalFishCount);
-	}
-	else
-	{
-		fmt::print("Failed to open input file.\n");
-	}
+        fmt::print("Total fish count: {}.\n", totalFishCount);
+    }
+    else
+    {
+        fmt::print("Failed to open input file.\n");
+    }
 
-	return 0;
+    return 0;
 }

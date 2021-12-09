@@ -93,8 +93,8 @@ std::tuple<std::uint32_t, std::uint32_t> ComputeGammaEpsilonValues(const BitCoun
 int main()
 {
     std::vector<std::uint32_t> valueList{};
-	if (ParseInput(valueList))
-	{
+    if (ParseInput(valueList))
+    {
         BitCounter bitCount{};
         ComputeBitCount(valueList, bitCount);
         auto [gamma, epsilon] { ComputeGammaEpsilonValues(bitCount, valueList.size()) };
@@ -111,11 +111,11 @@ int main()
         fmt::print("O2 Generator Rating: {}\n", o2GeneratorRating);
         fmt::print("CO2 scrubber Rating: {}\n", co2scrubberRating);
         fmt::print("O2 Generator * CO2 scrubber: {}\n", o2GeneratorRating * co2scrubberRating);
-	}
-	else
-	{
+    }
+    else
+    {
         fmt::print("Failed to open input file.\n");
-	}
+    }
 
-	return 0;
+    return 0;
 }
