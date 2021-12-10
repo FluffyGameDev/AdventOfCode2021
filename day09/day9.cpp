@@ -2,6 +2,7 @@
 #include <fstream>
 #include <functional>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -147,15 +148,15 @@ void FillBasinMap(BasinMap& basinMap, const HeightMap& heightMap, const std::vec
 
 void ComputeAllBasinSizes(const HeightMap& heightMap, const std::vector<Vec2>& lowPoints, std::vector<u32>& basinSizes)
 {
-    BasinMap basinMap{};
-    FillBasinMap(basinMap, heightMap, lowPoints);
+    BasinMap* basinMap{ new BasinMap{} };
+    FillBasinMap(*basinMap, heightMap, lowPoints);
 
     basinSizes.resize(lowPoints.size(), 0);
     for (u32 y = 0; y < K_MAP_HEIGHT; ++y)
     {
         for (u32 x = 0; x < K_MAP_WIDTH; ++x)
         {
-            i32 basinID{ basinMap[y][x] };
+            i32 basinID{ (*basinMap[y][x] };
             if (basinID >= 0 && basinID < basinSizes.size())
             {
                 ++basinSizes[basinID];
