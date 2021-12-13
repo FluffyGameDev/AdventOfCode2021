@@ -140,6 +140,7 @@ void BuildCaveNetwork(CaveNetwork& caveNetwork, const std::vector<CaveConnection
 }
 
 void VisitCave(size_t caveIndex,
+               u32 dualVisitCave,
                std::vector<const Cave*>& caveSequence,
                std::vector<u32>& visitCount,
                std::vector<Route>& routes,
@@ -162,10 +163,24 @@ void VisitCave(size_t caveIndex,
 
         for (size_t nearbyCaveID : currentCave->NearbyCaves)
         {
-            const Cave* nearbyCave{ &caveNetwork.Caves[nearbyCaveID] };
-            if (!nearbyCave->IsSmall || visitCount[nearbyCaveID] == 0)
+            if (nearbyCaveID != caveNetwork.StartIndex)
             {
-                VisitCave(nearbyCaveID, caveSequence, visitCount, routes, caveNetwork);
+                const Cave* nearbyCave{ &caveNetwork.Caves[nearbyCaveID] };
+                if (nearbyCave->IsSmall)
+                {
+                    if (visitCount[nearbyCaveID] == 0)
+                    {
+                        VisitCave(nearbyCaveID, dualVisitCave, caveSequence, visitCount, routes, caveNetwork);
+                    }
+                    else if (visitCount[nearbyCaveID] == 1 && dualVisitCave == u32Max)
+                    {
+                        VisitCave(nearbyCaveID, nearbyCaveID, caveSequence, visitCount, routes, caveNetwork);
+                    }
+                }
+                else
+                {
+                    VisitCave(nearbyCaveID, dualVisitCave, caveSequence, visitCount, routes, caveNetwork);
+                }
             }
         }
 
@@ -179,7 +194,18 @@ void ComputeAllPossibleRoutes(std::vector<Route>& routes, const CaveNetwork& cav
 {
     std::vector<const Cave*> caveSequence{};
     std::vector<u32> visitCount(caveNetwork.Caves.size(), 0);
-    VisitCave(caveNetwork.StartIndex, caveSequence, visitCount, routes, caveNetwork);
+    VisitCave(caveNetwork.StartIndex, u32Max, caveSequence, visitCount, routes, caveNetwork);
+}
+
+void DisplayRoute(const Route& route)
+{
+    CaveIDToText converter{};
+    for (CaveID id : route.CaveSequence)
+    {
+        converter.ID = id;
+        fmt::print("{}-", converter.Text);
+    }
+    fmt::print("\n");
 }
 
 int main()
@@ -192,6 +218,7 @@ int main()
 
         std::vector<Route> routes{};
         ComputeAllPossibleRoutes(routes, network);
+        //std::for_each(routes.begin(), routes.end(), DisplayRoute);
         fmt::print("Possible Route Count: {}.\n", routes.size());
     }
     else
