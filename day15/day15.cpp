@@ -8,8 +8,8 @@
 using u8 = std::uint8_t;
 using u32 = std::uint32_t;
 
-static constexpr size_t K_GRID_WIDTH{ 10 };
-static constexpr size_t K_GRID_HEIGHT{ 10 };
+static constexpr size_t K_GRID_WIDTH{ 100 };
+static constexpr size_t K_GRID_HEIGHT{ 100 };
 static constexpr size_t K_GRID_CELL_COUNT{ K_GRID_WIDTH * K_GRID_HEIGHT };
 
 static constexpr size_t K_GRID_EXTENSION{ 5 };
@@ -43,7 +43,7 @@ bool ReadInput(std::vector<u8>& grid)
 
 struct CellSearchInfo
 {
-    CellSearchInfo(u32 cumulativeScore, u8 xPos, u8 yPos)
+    CellSearchInfo(u32 cumulativeScore, u32 xPos, u32 yPos)
         : CumulativeScore{ cumulativeScore }
         , x{ xPos }
         , y{ yPos }
@@ -51,21 +51,21 @@ struct CellSearchInfo
     }
 
     u32 CumulativeScore{};
-    u8 x{};
-    u8 y{};
+    u32 x{};
+    u32 y{};
 };
 
 bool CompareCells(const CellSearchInfo& lhs, const CellSearchInfo& rhs)
 {
-    return lhs.CumulativeScore < rhs.CumulativeScore;
+    return lhs.CumulativeScore > rhs.CumulativeScore;
 }
 
 using CellQueue = std::priority_queue<CellSearchInfo, std::vector<CellSearchInfo>, decltype(&CompareCells)>;
 
 inline void TryVisitCell(CellQueue& cellQueue,
-                         std::vector<u32>& cellBestScore,
-                         const std::vector<u8>& grid,
-                         u32 cumulativeScore, u8 x, u8 y, u32 w, u32 h)
+    std::vector<u32>& cellBestScore,
+    const std::vector<u8>& grid,
+    u32 cumulativeScore, u32 x, u32 y, u32 w, u32 h)
 {
     if (x < w && y < h)
     {
@@ -98,6 +98,10 @@ u32 ComputeBestPathScore(const std::vector<u8>& grid, u32 w, u32 h)
             TryVisitCell(cellQueue, cellBestScore, grid, cellInfo.CumulativeScore, cellInfo.x, cellInfo.y + 1, w, h);
             TryVisitCell(cellQueue, cellBestScore, grid, cellInfo.CumulativeScore, cellInfo.x, cellInfo.y - 1, w, h);
         }
+        else
+        {
+            return cellBestScore[w * h - 1] - grid[0];
+        }
     }
 
     return cellBestScore[w * h - 1] - grid[0];
@@ -107,8 +111,8 @@ void BuildExtendedGrid(const std::vector<u8>& baseGrid, std::vector<u8>& extende
 {
     for (u32 index = 0; index < K_GRID_CELL_COUNT; ++index)
     {
-        u32 x{ index % K_GRID_WIDTH};
-        u32 y{ index / K_GRID_WIDTH};
+        u32 x{ index % K_GRID_WIDTH };
+        u32 y{ index / K_GRID_WIDTH };
 
         for (u32 j = 0; j < K_GRID_EXTENSION; ++j)
         {
@@ -132,7 +136,6 @@ int main()
         //u32 bestScore{ ComputeBestPathScore(grid, K_GRID_WIDTH, K_GRID_HEIGHT) };
         //fmt::print("Best Score: {}.\n", bestScore);
 
-        // Does not work for part 2. Must optimize!
         std::vector<u8> extendedGrid(K_EXTENDED_GRID_CELL_COUNT, 0);
         BuildExtendedGrid(grid, extendedGrid);
         u32 bestExtendedScore{ ComputeBestPathScore(extendedGrid, K_EXTENDED_GRID_WIDTH, K_EXTENDED_GRID_HEIGHT) };
